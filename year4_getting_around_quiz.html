@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 4 Module 6: Getting Around — Quiz Game</title>
+<style>
+:root{--primary:#3978d4;--secondary:#50d6b0;--accent:#ffca68;--bg:#eef5ff;--text:#24364b;--green:#168653;--red:#c0392b}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;min-height:100vh;padding:16px;background:linear-gradient(135deg,#e8f4ff,#f8f0ff);color:var(--text);display:flex;justify-content:center;align-items:center}
+.container{width:100%;max-width:850px;background:#fff;border-radius:22px;padding:clamp(18px,4vw,32px);box-shadow:0 14px 40px #263d5b20}
+h1{text-align:center;color:var(--primary);font-size:clamp(1.45rem,4vw,2rem);margin:0 0 20px}
+.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#edf4ff;padding:12px 16px;border-radius:12px;font-weight:750;margin-bottom:18px}
+.reference{background:#fff8e7;border:2px dashed #efb54e;border-radius:14px;padding:14px;margin-bottom:22px;max-height:245px;overflow:auto}
+.reference h3{color:#a7660b;margin:0 0 8px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.9rem}
+th,td{border:1px solid #e1d6bd;padding:7px;text-align:center}th{background:#ffedc6}
+ul{margin:8px 0;padding-left:22px}
+.question{font-size:clamp(1.05rem,3vw,1.25rem);font-weight:750;line-height:1.5;margin-bottom:16px}
+.options{display:grid;grid-template-columns:1fr;gap:10px}
+.option{background:#f6f8fc;border:2px solid #e0e7f0;border-radius:12px;padding:14px 16px;text-align:left;font-size:1rem;cursor:pointer;color:var(--text);transition:.15s}
+.option:hover:not(:disabled){border-color:var(--primary);background:#edf4ff}
+.option:disabled{cursor:default}.option.correct{background:#e4f8ed;border-color:#36ad72;color:#12683f;font-weight:700}.option.wrong{background:#ffebeb;border-color:#e16a6a;color:#a52727}
+.input-row{display:flex;gap:9px;flex-wrap:wrap}
+input{flex:1;min-width:180px;padding:13px;border:2px solid #cbd5e1;border-radius:10px;font-size:1rem}
+button.primary,button.next,button.restart{border:0;border-radius:10px;padding:13px 20px;font-weight:750;font-size:1rem;cursor:pointer}
+button.primary,button.restart{background:var(--primary);color:white}button.primary:hover,button.restart:hover{background:#285eae}
+button.next{display:none;float:right;background:var(--secondary);color:#124e40;margin-top:16px}
+.feedback{min-height:30px;margin-top:14px;font-weight:750;line-height:1.5}
+.results{text-align:center;display:none;padding:16px 0}.results .big{font-size:2rem;font-weight:850;color:var(--primary)}
+.progress{height:8px;background:#e6edf6;border-radius:99px;overflow:hidden;margin:-6px 0 18px}.bar{height:100%;width:0;background:linear-gradient(90deg,#3978d4,#50d6b0);transition:width .25s}
+.small{font-size:.9rem;color:#5b6b7d}
+@media(min-width:620px){.options{grid-template-columns:1fr 1fr}.options .option{min-height:72px}}
+</style>
+</head>
+<body>
+<main class="container">
+<h1>🚲 Getting Around Quiz Game ✈️</h1>
+<section id="game">
+<div class="meta"><span id="qnum">Question 1/9</span><span id="score">⭐ Score: 0</span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="reference"><h3>📋 Reference Information</h3><div id="ref"></div></div>
+<div class="question" id="question">Loading question…</div>
+<div id="answer"></div><div class="feedback" id="feedback" aria-live="polite"></div>
+<button class="next" id="next">Next Question ➜</button>
+</section>
+<section class="results" id="results"><div style="font-size:3rem">🎉</div><h2>Game Completed!</h2><div class="big" id="final"></div><p id="message"></p><button class="restart" id="restart">Play Again 🔄</button></section>
+</main>
+<script>
+const timetable = `<strong>🚆 Train & Flight Schedule</strong><table><thead><tr><th>Mode</th><th>Destination</th><th>Leaves</th><th>Arrives</th></tr></thead><tbody>
+<tr><td>Train</td><td>Tanjung Malim</td><td>8.50</td><td>9.25</td></tr><tr><td>Train</td><td>Ipoh</td><td>6.45</td><td>8.55</td></tr><tr><td>Train</td><td>Sungai Petani</td><td>7.20</td><td>12.30</td></tr><tr><td>Train</td><td>Arau</td><td>6.30</td><td>12.45</td></tr><tr><td>Plane</td><td>The UK</td><td>2.20</td><td>12.35</td></tr><tr><td>Plane</td><td>The US</td><td>1.30</td><td>9.55</td></tr><tr><td>Plane</td><td>China</td><td>3.40</td><td>12.50</td></tr><tr><td>Plane</td><td>Brazil</td><td>1.45</td><td>10.25</td></tr></tbody></table>`;
+const prices = `<strong>🛍️ Item Prices</strong><ul><li><strong>Ice cream:</strong> RM 2.50 (two ringgit and fifty sen)</li><li><strong>Train ticket:</strong> RM 15.25</li><li><strong>Computer:</strong> RM 500.99</li><li><strong>Shoes:</strong> RM 175.55</li><li><strong>Beach ball:</strong> RM 12.70</li><li><strong>Cheese / butter:</strong> RM 8.80</li><li><strong>Bicycle:</strong> RM 445.15</li></ul>`;
+const questions=[
+{ref:prices,question:"How much is the train ticket?",type:"mcq",options:["It's fifteen ringgit and twenty-five sen.","It's fifty ringgit and twenty-five sen.","It's fifteen ringgit and fifty sen."],answer:0},
+{ref:prices,question:"How much are the shoes?",type:"mcq",options:["It's one hundred seventy-five ringgit and fifty sen.","They're one hundred seventy-five ringgit and fifty-five sen.","They're five hundred ringgit and ninety-nine sen."],answer:1},
+{ref:prices,question:"Complete the response: “How much is the bicycle?” → “It's __________.” (RM 445.15)",type:"text",answers:["four hundred forty-five ringgit and fifteen sen","four hundred forty five ringgit and fifteen sen"]},
+{ref:timetable,question:"What time does the plane arrive in the US?",type:"mcq",options:["It arrives at five to ten (9.55).","It arrives at half past one (1.30).","It arrives at twenty past two (2.20)."],answer:0},
+{ref:timetable,question:"What time does the train leave for Ipoh?",type:"mcq",options:["It leaves at six-forty-five.","It leaves at eight-fifty-five.","It leaves at six-thirty."],answer:0},
+{ref:timetable,question:"What time does the plane leave for Brazil?",type:"mcq",options:["It leaves at ten-twenty-five.","It leaves at one-forty-five.","It leaves at three-forty."],answer:1},
+{ref:timetable,question:"What time does the train arrive at Tanjung Malim?",type:"mcq",options:["It arrives at eight-fifty.","It arrives at nine-twenty-five.","It arrives at six-thirty."],answer:1},
+{ref:prices,question:"Write the question for this answer: “It's eight ringgit and eighty sen.” (Item: cheese/butter)",type:"text",answers:["how much is the cheese","how much is the butter","how much is the cheese butter"]},
+{ref:timetable,question:"Write the question for this answer: “It leaves at three-forty.” (Destination: China)",type:"text",answers:["what time does the plane leave to china","what time does the plane leave for china"]}
+];
+let index=0,score=0,answered=false;
+const $=id=>document.getElementById(id);
+function normalize(s){return s.toLowerCase().trim().replace(/[’']/g,"").replace(/[?.!,]/g,"").replace(/\s+/g," ");}
+function load(){
+ answered=false;const q=questions[index];$("qnum").textContent=`Question ${index+1}/${questions.length}`;$("score").textContent=`⭐ Score: ${score}`;$("bar").style.width=`${index/questions.length*100}%`;$("ref").innerHTML=q.ref;$("question").textContent=q.question;$("feedback").textContent="";$("feedback").style.color="";$("next").style.display="none";$("answer").innerHTML="";
+ if(q.type==="mcq"){const grid=document.createElement("div");grid.className="options";q.options.forEach((opt,i)=>{const b=document.createElement("button");b.className="option";b.textContent=String.fromCharCode(65+i)+". "+opt;b.onclick=()=>checkMCQ(i);grid.appendChild(b)});$("answer").appendChild(grid);}
+ else{const row=document.createElement("div");row.className="input-row";const input=document.createElement("input");input.id="userInput";input.type="text";input.placeholder="Type your answer here…";input.setAttribute("aria-label","Your answer");const submit=document.createElement("button");submit.className="primary";submit.textContent="Submit";submit.onclick=checkText;input.addEventListener("keydown",e=>{if(e.key==="Enter")checkText()});row.append(input,submit);$("answer").appendChild(row);input.focus();}
+}
+function finishAnswer(ok,explanation=""){
+ answered=true;if(ok){score++;$("feedback").textContent="✨ Correct! Well done!";$("feedback").style.color="var(--green)";}
+ else{$("feedback").textContent="❌ Not quite. "+(explanation||"Check the reference information and keep practising.");$("feedback").style.color="var(--red)";}
+ $("score").textContent=`⭐ Score: ${score}`;$("bar").style.width=`${(index+1)/questions.length*100}%`;$("next").style.display="inline-block";
+ document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+}
+function checkMCQ(i){if(answered)return;const q=questions[index],buttons=[...document.querySelectorAll(".option")];buttons[q.answer].classList.add("correct");if(i!==q.answer)buttons[i].classList.add("wrong");finishAnswer(i===q.answer,i===q.answer?"":`The correct answer is: ${q.options[q.answer]}`);}
+function checkText(){if(answered)return;const input=$("userInput"),value=normalize(input.value);if(!value){input.focus();return;}const q=questions[index];const ok=q.answers.some(a=>normalize(a)===value);finishAnswer(ok,ok?"":`One acceptable answer: “${q.answers[0]}.”`);input.disabled=true;document.querySelector(".input-row .primary").disabled=true;}
+$("next").onclick=()=>{index++;if(index<questions.length)load();else showResults();};
+function showResults(){$("game").style.display="none";$("results").style.display="block";$("final").textContent=`${score} / ${questions.length}`;$("bar").style.width="100%";$("message").textContent=score===questions.length?"🌟 Outstanding! Perfect score!":score>=5?"👍 Good job! Review any tricky questions and try for full marks!":"💪 Nice try! Review the tables and play again to improve your score!";}
+function restart() {index=0;score=0;$("game").style.display="block";$("results").style.display="none";load();}
+$("restart").onclick=restart;load();
+</script>
+</body>
+</html>
